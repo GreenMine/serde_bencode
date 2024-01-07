@@ -13,6 +13,7 @@ pub enum Error {
     ExpectedList,
     ExpectedDictionary,
     ExpectedEnd,
+    Syntax,
     Eof,
 }
 

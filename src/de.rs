@@ -78,14 +78,20 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: de::Visitor<'de>,
     {
-        todo!()
+        match self.input.try_peek()? {
+            b'0'..=b'9' => self.deserialize_string(visitor),
+            b'i' => self.deserialize_i64(visitor),
+            b'l' => self.deserialize_seq(visitor),
+            b'd' => self.deserialize_map(visitor),
+            _ => Err(Error::Syntax),
+        }
     }
 
     fn deserialize_bool<V>(self, visitor: V) -> std::result::Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {
-        todo!()
+        unimplemented!()
     }
 
     fn deserialize_i8<V>(self, visitor: V) -> std::result::Result<V::Value, Self::Error>
@@ -295,7 +301,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: de::Visitor<'de>,
     {
-        todo!()
+        self.deserialize_map(visitor)
     }
 
     fn deserialize_enum<V>(
@@ -314,14 +320,14 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: de::Visitor<'de>,
     {
-        todo!()
+        self.deserialize_string(visitor)
     }
 
     fn deserialize_ignored_any<V>(self, visitor: V) -> std::result::Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {
-        todo!()
+        self.deserialize_any(visitor)
     }
 }
 
@@ -376,17 +382,20 @@ mod tests {
     use std::collections::HashMap;
 
     #[test]
-    pub fn test_num() {
+    pub fn test_struct() {
         #[derive(Deserialize, Debug, PartialEq)]
         struct Baz {
             foo: u64,
             bar: u64,
         }
 
-        let j = b"i-1e";
-        let expected = -1;
+        let j = b"d3:fooi255e3:bari1023e1:zi1ee";
+        let expected = Baz {
+            foo: 255,
+            bar: 1023,
+        };
 
-        assert_eq!(expected, from_binary::<i16>(j).unwrap());
+        assert_eq!(expected, from_binary::<Baz>(j).unwrap());
     }
 
     #[test]
