@@ -1,5 +1,5 @@
-use crate::bencode::types;
 use crate::stream::BinaryStream;
+use crate::types;
 use crate::{Error, Result};
 
 use serde::{de, Deserialize};
@@ -53,10 +53,9 @@ impl<'de> Deserializer<'de> {
             return Err(Error::ExpectedNumber);
         }
 
-        return self
-            .parse_seq_number(b'e')?
+        self.parse_seq_number(b'e')?
             .try_into()
-            .map_err(|_| Error::ExpectedNumber);
+            .map_err(|_| Error::ExpectedNumber)
     }
 
     pub(crate) fn parse_string(&mut self) -> Result<types::String> {
@@ -87,7 +86,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         }
     }
 
-    fn deserialize_bool<V>(self, visitor: V) -> std::result::Result<V::Value, Self::Error>
+    fn deserialize_bool<V>(self, _visitor: V) -> std::result::Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {
@@ -150,28 +149,28 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         visitor.visit_u64(self.parse_numeric()?)
     }
 
-    fn deserialize_f32<V>(self, visitor: V) -> std::result::Result<V::Value, Self::Error>
+    fn deserialize_f32<V>(self, _visitor: V) -> std::result::Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {
         unimplemented!()
     }
 
-    fn deserialize_f64<V>(self, visitor: V) -> std::result::Result<V::Value, Self::Error>
+    fn deserialize_f64<V>(self, _visitor: V) -> std::result::Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {
         unimplemented!()
     }
 
-    fn deserialize_char<V>(self, visitor: V) -> std::result::Result<V::Value, Self::Error>
+    fn deserialize_char<V>(self, _visitor: V) -> std::result::Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {
         unimplemented!()
     }
 
-    fn deserialize_str<V>(self, visitor: V) -> std::result::Result<V::Value, Self::Error>
+    fn deserialize_str<V>(self, _visitor: V) -> std::result::Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {
@@ -185,14 +184,14 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         visitor.visit_string(self.parse_string()?)
     }
 
-    fn deserialize_bytes<V>(self, visitor: V) -> std::result::Result<V::Value, Self::Error>
+    fn deserialize_bytes<V>(self, _visitor: V) -> std::result::Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {
         todo!()
     }
 
-    fn deserialize_byte_buf<V>(self, visitor: V) -> std::result::Result<V::Value, Self::Error>
+    fn deserialize_byte_buf<V>(self, _visitor: V) -> std::result::Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {
@@ -206,7 +205,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         visitor.visit_some(self)
     }
 
-    fn deserialize_unit<V>(self, visitor: V) -> std::result::Result<V::Value, Self::Error>
+    fn deserialize_unit<V>(self, _visitor: V) -> std::result::Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {
@@ -215,8 +214,8 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
 
     fn deserialize_unit_struct<V>(
         self,
-        name: &'static str,
-        visitor: V,
+        _name: &'static str,
+        _visitor: V,
     ) -> std::result::Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
@@ -226,7 +225,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
 
     fn deserialize_newtype_struct<V>(
         self,
-        name: &'static str,
+        _name: &'static str,
         visitor: V,
     ) -> std::result::Result<V::Value, Self::Error>
     where
@@ -243,7 +242,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
             let value = visitor.visit_seq(BencodeCollection { de: self })?;
 
             if self.input.try_next()? == b'e' {
-                return Ok(value);
+                Ok(value)
             } else {
                 Err(Error::ExpectedEnd)
             }
@@ -254,7 +253,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
 
     fn deserialize_tuple<V>(
         self,
-        len: usize,
+        _len: usize,
         visitor: V,
     ) -> std::result::Result<V::Value, Self::Error>
     where
@@ -265,8 +264,8 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
 
     fn deserialize_tuple_struct<V>(
         self,
-        name: &'static str,
-        len: usize,
+        _name: &'static str,
+        _len: usize,
         visitor: V,
     ) -> std::result::Result<V::Value, Self::Error>
     where
@@ -294,8 +293,8 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
 
     fn deserialize_struct<V>(
         self,
-        name: &'static str,
-        fields: &'static [&'static str],
+        _name: &'static str,
+        _fields: &'static [&'static str],
         visitor: V,
     ) -> std::result::Result<V::Value, Self::Error>
     where
@@ -306,9 +305,9 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
 
     fn deserialize_enum<V>(
         self,
-        name: &'static str,
-        variants: &'static [&'static str],
-        visitor: V,
+        _name: &'static str,
+        _variants: &'static [&'static str],
+        _visitor: V,
     ) -> std::result::Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
