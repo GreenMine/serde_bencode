@@ -12,5 +12,5 @@ pub mod types {
     pub type Number = i64;
     pub type String = std::string::String;
     pub type List<T> = Vec<T>;
-    pub type Dictionary<T> = std::collections::HashMap<String, T>;
+    pub type Dictionary<T> = std::collections::BTreeMap<String, T>;
 }
