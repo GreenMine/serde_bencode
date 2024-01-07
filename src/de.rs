@@ -1,4 +1,4 @@
-use crate::bencode::{self, types};
+use crate::bencode::types;
 use crate::stream::BinaryStream;
 use crate::{Error, Result};
 
@@ -203,7 +203,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: de::Visitor<'de>,
     {
-        unimplemented!()
+        visitor.visit_some(self)
     }
 
     fn deserialize_unit<V>(self, visitor: V) -> std::result::Result<V::Value, Self::Error>
