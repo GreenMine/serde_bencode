@@ -9,7 +9,9 @@ pub enum Error {
     Message(String),
 
     ExpectedNumber,
+    ExpectedString,
     ExpectedList,
+    ExpectedDictionary,
     ExpectedEnd,
     Eof,
 }

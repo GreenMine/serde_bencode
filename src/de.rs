@@ -234,7 +234,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         V: de::Visitor<'de>,
     {
         if self.input.try_next()? == b'l' {
-            let value = visitor.visit_seq(BencodeList { de: self })?;
+            let value = visitor.visit_seq(BencodeCollection { de: self })?;
 
             if self.input.try_next()? == b'e' {
                 return Ok(value);
@@ -273,7 +273,17 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: de::Visitor<'de>,
     {
-        todo!()
+        if self.input.try_next()? == b'd' {
+            let value = visitor.visit_map(BencodeCollection { de: self })?;
+
+            if self.input.try_next()? == b'e' {
+                Ok(value)
+            } else {
+                Err(Error::ExpectedEnd)
+            }
+        } else {
+            Err(Error::ExpectedDictionary)
+        }
     }
 
     fn deserialize_struct<V>(
@@ -315,11 +325,11 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     }
 }
 
-struct BencodeList<'a, 'de: 'a> {
+struct BencodeCollection<'a, 'de: 'a> {
     de: &'a mut Deserializer<'de>,
 }
 
-impl<'a, 'de> de::SeqAccess<'de> for BencodeList<'a, 'de> {
+impl<'a, 'de> de::SeqAccess<'de> for BencodeCollection<'a, 'de> {
     type Error = Error;
 
     fn next_element_seed<T>(
@@ -337,10 +347,33 @@ impl<'a, 'de> de::SeqAccess<'de> for BencodeList<'a, 'de> {
     }
 }
 
+impl<'a, 'de> de::MapAccess<'de> for BencodeCollection<'a, 'de> {
+    type Error = Error;
+
+    fn next_key_seed<K>(&mut self, seed: K) -> std::result::Result<Option<K::Value>, Self::Error>
+    where
+        K: de::DeserializeSeed<'de>,
+    {
+        if self.de.input.try_peek()? == b'e' {
+            return Ok(None);
+        }
+
+        seed.deserialize(&mut *self.de).map(Some)
+    }
+
+    fn next_value_seed<V>(&mut self, seed: V) -> std::result::Result<V::Value, Self::Error>
+    where
+        V: de::DeserializeSeed<'de>,
+    {
+        seed.deserialize(&mut *self.de)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::from_binary;
     use serde_derive::Deserialize;
+    use std::collections::HashMap;
 
     #[test]
     pub fn test_num() {
@@ -384,6 +417,36 @@ mod tests {
     pub fn test_tuple() {
         let j = b"l4:spam4:eggs4:lulwe";
         let expected: (String, String) = ("spam".to_string(), "eggs".to_string());
+
+        assert_eq!(expected, from_binary(j).unwrap());
+    }
+
+    #[test]
+    pub fn test_empty_dictionary() {
+        let j = b"de";
+        let expected: HashMap<String, i32> = HashMap::new();
+
+        assert_eq!(expected, from_binary(j).unwrap());
+    }
+
+    #[test]
+    pub fn test_dictionary() {
+        let j = b"d3:onei1e3:twoi2e5:threei3e4:fouri4ee";
+        let mut expected: HashMap<String, u8> = HashMap::new();
+        expected.insert("one".to_string(), 1);
+        expected.insert("two".to_string(), 2);
+        expected.insert("three".to_string(), 3);
+        expected.insert("four".to_string(), 4);
+
+        assert_eq!(expected, from_binary(j).unwrap());
+    }
+
+    #[test]
+    pub fn test_list_in_dictionary() {
+        let j = b"d4:spaml1:a1:bee";
+
+        let mut expected = HashMap::new();
+        expected.insert("spam".to_string(), vec!["a".to_string(), "b".to_string()]);
 
         assert_eq!(expected, from_binary(j).unwrap());
     }
