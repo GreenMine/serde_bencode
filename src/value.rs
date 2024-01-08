@@ -107,6 +107,6 @@ mod tests {
         );
         let expected = Dictionary(map);
 
-        assert_eq!(expected, dbg!(from_binary(j).unwrap()));
+        assert_eq!(expected, from_binary(j).unwrap());
     }
 }
