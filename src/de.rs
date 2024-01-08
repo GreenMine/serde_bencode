@@ -93,7 +93,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: de::Visitor<'de>,
     {
-        unimplemented!()
+        Err(Error::TypeNotSupported)
     }
 
     fn deserialize_i8<V>(self, visitor: V) -> std::result::Result<V::Value, Self::Error>
@@ -156,28 +156,28 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: de::Visitor<'de>,
     {
-        unimplemented!()
+        Err(Error::TypeNotSupported)
     }
 
     fn deserialize_f64<V>(self, _visitor: V) -> std::result::Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {
-        unimplemented!()
+        Err(Error::TypeNotSupported)
     }
 
     fn deserialize_char<V>(self, _visitor: V) -> std::result::Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {
-        unimplemented!()
+        Err(Error::TypeNotSupported)
     }
 
     fn deserialize_str<V>(self, _visitor: V) -> std::result::Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {
-        Err(Error::BorrowStr)
+        Err(Error::TypeNotSupported)
     }
 
     fn deserialize_string<V>(self, visitor: V) -> std::result::Result<V::Value, Self::Error>
@@ -413,7 +413,7 @@ mod tests {
 
         assert!(matches!(
             from_binary::<&str>(j),
-            Err(crate::Error::BorrowStr)
+            Err(crate::Error::TypeNotSupported)
         ));
     }
 

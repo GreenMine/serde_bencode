@@ -13,7 +13,7 @@ pub enum Error {
     ExpectedList,
     ExpectedDictionary,
     ExpectedEnd,
-    BorrowStr,
+    TypeNotSupported,
     Syntax,
     Eof,
 }
@@ -45,12 +45,9 @@ impl std::fmt::Display for Error {
             Error::ExpectedString => write!(f, "expected string"),
             Error::ExpectedList => write!(f, "expected list"),
             Error::ExpectedDictionary => write!(f, "expected dictionary"),
-            Error::BorrowStr => {
-                write!(f, "str cannot be deserialized because of allocation needed")
-            }
+            Error::TypeNotSupported => write!(f, "type is not supported in BENCODE format"),
             Error::ExpectedEnd => write!(f, "expected end"),
             Error::Syntax => write!(f, "syntax error"),
-            // _ => unimplemented!(),
         }
     }
 }
