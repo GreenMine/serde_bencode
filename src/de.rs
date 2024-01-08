@@ -58,10 +58,15 @@ impl<'de> Deserializer<'de> {
             .map_err(|_| Error::ExpectedNumber)
     }
 
+    pub(crate) fn parse_bytes(&mut self) -> Result<&'de [u8]> {
+        let len = self.parse_seq_number(b':')? as usize;
+
+        self.input.try_take(len)
+    }
+
     pub(crate) fn parse_string(&mut self) -> Result<types::String> {
         let len = self.parse_seq_number(b':')?;
 
-        // TODO: validate size before take
         Ok(self
             .input
             .take(len as usize)
@@ -184,11 +189,11 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         visitor.visit_string(self.parse_string()?)
     }
 
-    fn deserialize_bytes<V>(self, _visitor: V) -> std::result::Result<V::Value, Self::Error>
+    fn deserialize_bytes<V>(self, visitor: V) -> std::result::Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {
-        todo!()
+        visitor.visit_borrowed_bytes(self.parse_bytes()?)
     }
 
     fn deserialize_byte_buf<V>(self, _visitor: V) -> std::result::Result<V::Value, Self::Error>
@@ -475,5 +480,13 @@ mod tests {
         let expected = b"asdf";
 
         assert_eq!(expected, from_binary::<&[u8]>(j).unwrap());
+    }
+
+    #[test]
+    pub fn test_bytes_list() {
+        let j = b"l4:teste";
+        let expected = vec![&b"test"[..]];
+
+        assert_eq!(expected, from_binary::<Vec<&[u8]>>(j).unwrap());
     }
 }

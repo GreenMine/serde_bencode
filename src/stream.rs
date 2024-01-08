@@ -27,6 +27,18 @@ impl<'s> BinaryStream<'s> {
 
         Ok(v)
     }
+
+    pub fn try_take(&mut self, n: usize) -> Result<&'s [Unit]> {
+        let new_p = self.p + n;
+        if new_p > self.data.len() {
+            return Err(Error::Eof);
+        }
+
+        let slice = &self.data[self.p..new_p];
+        self.p = new_p;
+
+        Ok(slice)
+    }
 }
 
 impl<'s> Iterator for &mut BinaryStream<'s> {
