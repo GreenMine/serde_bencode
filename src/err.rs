@@ -13,6 +13,7 @@ pub enum Error {
     ExpectedList,
     ExpectedDictionary,
     ExpectedEnd,
+    BorrowStr,
     Syntax,
     Eof,
 }
@@ -40,7 +41,16 @@ impl std::fmt::Display for Error {
         match self {
             Error::Message(m) => f.write_str(m),
             Error::Eof => write!(f, "unexpected end of file"),
-            _ => unimplemented!(),
+            Error::ExpectedNumber => write!(f, "expected number"),
+            Error::ExpectedString => write!(f, "expected string"),
+            Error::ExpectedList => write!(f, "expected list"),
+            Error::ExpectedDictionary => write!(f, "expected dictionary"),
+            Error::BorrowStr => {
+                write!(f, "str cannot be deserialized because of allocation needed")
+            }
+            Error::ExpectedEnd => write!(f, "expected end"),
+            Error::Syntax => write!(f, "syntax error"),
+            // _ => unimplemented!(),
         }
     }
 }

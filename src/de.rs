@@ -174,7 +174,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: de::Visitor<'de>,
     {
-        todo!()
+        Err(Error::BorrowStr)
     }
 
     fn deserialize_string<V>(self, visitor: V) -> std::result::Result<V::Value, Self::Error>
@@ -423,7 +423,7 @@ mod tests {
 
     #[test]
     pub fn test_tuple() {
-        let j = b"l4:spam4:eggs4:lulwe";
+        let j = b"l4:spam4:eggse";
         let expected: (String, String) = ("spam".to_string(), "eggs".to_string());
 
         assert_eq!(expected, from_binary(j).unwrap());
@@ -457,5 +457,23 @@ mod tests {
         expected.insert("spam".to_string(), vec!["a".to_string(), "b".to_string()]);
 
         assert_eq!(expected, from_binary(j).unwrap());
+    }
+
+    #[test]
+    pub fn test_borrow_str() {
+        let j = b"4:meta";
+
+        assert!(matches!(
+            from_binary::<&str>(j),
+            Err(crate::Error::BorrowStr)
+        ));
+    }
+
+    #[test]
+    pub fn test_bytes() {
+        let j = b"4:asdf";
+        let expected = b"asdf";
+
+        assert_eq!(expected, from_binary::<&[u8]>(j).unwrap());
     }
 }
