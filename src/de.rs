@@ -379,9 +379,43 @@ impl<'a, 'de> de::MapAccess<'de> for BencodeCollection<'a, 'de> {
 
 #[cfg(test)]
 mod tests {
+
     use super::from_binary;
     use serde_derive::Deserialize;
     use std::collections::HashMap;
+
+    crate::macros::parse_test! {
+        test_string: String => (b"3:foo" == "foo".to_string());
+        test_empty_list: Vec<String> => (b"le" == Vec::new());
+        test_list: Vec<String> => (b"l4:spam4:eggse" == vec!["spam".to_string(), "eggs".to_string()]);
+        test_tuple: (String, String) => (b"l4:spam4:eggse" == ("spam".to_string(), "eggs".to_string()));
+        test_empty_dictionary: HashMap<String, i32> => (b"de" == HashMap::new());
+        test_dictionary: HashMap<String, u8> => (b"d3:onei1e3:twoi2e5:threei3e4:fouri4ee" == {
+            let mut map = HashMap::new();
+            map.insert("one".to_string(), 1);
+            map.insert("two".to_string(), 2);
+            map.insert("three".to_string(), 3);
+            map.insert("four".to_string(), 4);
+            map
+        });
+        test_list_in_dictionary: _ => (b"d4:spaml1:a1:bee" == {
+            let mut map = HashMap::new();
+            map.insert("spam".to_string(), vec!["a".to_string(), "b".to_string()]);
+            map
+        });
+        test_bytes: &[u8] => (b"4:asdf" == b"asdf");
+        test_bytes_list: Vec<&[u8]> => (b"l4:teste" == vec![&b"test"[..]])
+    }
+
+    #[test]
+    pub fn test_borrow_str() {
+        let j = b"4:meta";
+
+        assert!(matches!(
+            from_binary::<&str>(j),
+            Err(crate::Error::BorrowStr)
+        ));
+    }
 
     #[test]
     pub fn test_struct() {
@@ -398,93 +432,5 @@ mod tests {
         };
 
         assert_eq!(expected, from_binary::<Baz>(j).unwrap());
-    }
-
-    #[test]
-    pub fn test_string() {
-        let j = b"3:foo";
-        let expected = "foo";
-
-        assert_eq!(expected, from_binary::<String>(j).unwrap());
-    }
-
-    #[test]
-    pub fn test_empty_list() {
-        let j = b"le";
-        let expected: Vec<String> = Vec::new();
-
-        assert_eq!(expected, from_binary::<Vec<String>>(j).unwrap())
-    }
-
-    #[test]
-    pub fn test_list() {
-        let j = b"l4:spam4:eggse";
-        let expected: Vec<String> = vec!["spam".to_string(), "eggs".to_string()];
-
-        assert_eq!(expected, from_binary::<Vec<String>>(j).unwrap())
-    }
-
-    #[test]
-    pub fn test_tuple() {
-        let j = b"l4:spam4:eggse";
-        let expected: (String, String) = ("spam".to_string(), "eggs".to_string());
-
-        assert_eq!(expected, from_binary(j).unwrap());
-    }
-
-    #[test]
-    pub fn test_empty_dictionary() {
-        let j = b"de";
-        let expected: HashMap<String, i32> = HashMap::new();
-
-        assert_eq!(expected, from_binary(j).unwrap());
-    }
-
-    #[test]
-    pub fn test_dictionary() {
-        let j = b"d3:onei1e3:twoi2e5:threei3e4:fouri4ee";
-        let mut expected: HashMap<String, u8> = HashMap::new();
-        expected.insert("one".to_string(), 1);
-        expected.insert("two".to_string(), 2);
-        expected.insert("three".to_string(), 3);
-        expected.insert("four".to_string(), 4);
-
-        assert_eq!(expected, from_binary(j).unwrap());
-    }
-
-    #[test]
-    pub fn test_list_in_dictionary() {
-        let j = b"d4:spaml1:a1:bee";
-
-        let mut expected = HashMap::new();
-        expected.insert("spam".to_string(), vec!["a".to_string(), "b".to_string()]);
-
-        assert_eq!(expected, from_binary(j).unwrap());
-    }
-
-    #[test]
-    pub fn test_borrow_str() {
-        let j = b"4:meta";
-
-        assert!(matches!(
-            from_binary::<&str>(j),
-            Err(crate::Error::BorrowStr)
-        ));
-    }
-
-    #[test]
-    pub fn test_bytes() {
-        let j = b"4:asdf";
-        let expected = b"asdf";
-
-        assert_eq!(expected, from_binary::<&[u8]>(j).unwrap());
-    }
-
-    #[test]
-    pub fn test_bytes_list() {
-        let j = b"l4:teste";
-        let expected = vec![&b"test"[..]];
-
-        assert_eq!(expected, from_binary::<Vec<&[u8]>>(j).unwrap());
     }
 }

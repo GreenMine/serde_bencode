@@ -72,41 +72,17 @@ mod tests {
     use super::Value::*;
     use crate::from_binary;
 
-    #[test]
-    pub fn test_number() {
-        let j = b"i4e";
-        let expected = Number(4);
-
-        assert_eq!(expected, from_binary(j).unwrap())
-    }
-
-    #[test]
-    pub fn test_string() {
-        let j = b"4:test";
-        let expected = String("test".to_string());
-
-        assert_eq!(expected, dbg!(from_binary(j).unwrap()))
-    }
-
-    #[test]
-    pub fn test_list() {
-        let j = b"l3:foo3:bare";
-        let expected = List(vec![String("foo".to_string()), String("bar".to_string())]);
-
-        assert_eq!(expected, from_binary(j).unwrap());
-    }
-
-    #[test]
-    pub fn test_dictionary() {
-        let j = b"d4:spaml1:a1:bee";
-
-        let mut map = BTreeMap::new();
-        map.insert(
-            "spam".to_string(),
-            List(vec![String("a".to_string()), String("b".to_string())]),
-        );
-        let expected = Dictionary(map);
-
-        assert_eq!(expected, from_binary(j).unwrap());
+    crate::macros::parse_test! {
+        test_number: _ => (b"i4e" == Number(4));
+        test_string: _ => (b"4:test" == String("test".to_string()));
+        test_list: _ => (b"l3:foo3:bare" == List(vec![String("foo".to_string()), String("bar".to_string())]));
+        test_dictionary: _ => (b"d4:spaml1:a1:bee" == {
+            let mut map = BTreeMap::new();
+            map.insert(
+                "spam".to_string(),
+                List(vec![String("a".to_string()), String("b".to_string())]),
+            );
+            Dictionary(map)
+        })
     }
 }
