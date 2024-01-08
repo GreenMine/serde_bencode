@@ -29,14 +29,16 @@ impl<'de> Deserializer<'de> {
         let mut init = 0i64;
         let next = self.input.try_next()?;
         if next != b'-' {
-            init = to_num(next).ok_or(Error::ExpectedNumber)?;
+            init = to_num(next).ok_or(Error::Syntax)?;
         }
 
+        // TODO: if sequence just end(eof), error not be,
+        // which may cause logical bug
         let mut result = self
             .input
             .take_while(|&v| v != terminator)
             .try_fold(init, |acc, v| {
-                let v = to_num(v).ok_or(Error::ExpectedNumber)?;
+                let v = to_num(v).ok_or(Error::Syntax)?;
 
                 Ok(acc * 10 + v)
             })?;
