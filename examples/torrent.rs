@@ -1,11 +1,12 @@
 use serde_derive::Deserialize;
 
 #[derive(Deserialize, Debug)]
-struct Torrent {
+struct Torrent<'a> {
     announce: Option<String>,
     #[serde(rename = "announce-list")]
     announce_list: Option<Vec<String>>,
-    info: TorrentInfo,
+    #[serde(borrow)]
+    info: TorrentInfo<'a>,
     #[serde(rename = "creation date")]
     creation_date: Option<u32>,
     comment: Option<String>,
@@ -15,10 +16,11 @@ struct Torrent {
 }
 
 #[derive(Deserialize, Debug)]
-struct TorrentInfo {
+struct TorrentInfo<'a> {
     #[serde(rename = "piece length")]
     piece_length: usize,
-    pieces: String,
+    #[serde(borrow)]
+    pieces: &'a [u8],
     #[serde(default)]
     private: u8,
     name: String,
@@ -37,5 +39,5 @@ fn main() {
 
     let torrent: Torrent = serde_bencode::from_binary(&content).unwrap();
 
-    println!("Torrent info: {torrent:#?}");
+    println!("Torrent info: {torrent:?}");
 }
