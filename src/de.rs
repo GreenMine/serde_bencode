@@ -65,12 +65,10 @@ impl<'de> Deserializer<'de> {
     }
 
     pub(crate) fn parse_string(&mut self) -> Result<types::String> {
-        let len = self.parse_seq_number(b':')?;
-
         Ok(self
-            .input
-            .take(len as usize)
-            .map(|v| v as char)
+            .parse_bytes()?
+            .into_iter()
+            .map(|&v| v as char)
             .collect::<String>())
     }
 }
