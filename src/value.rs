@@ -3,13 +3,13 @@ use std::collections::BTreeMap;
 use crate::types;
 use serde::de;
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Value {
     Number(types::Number),
     String(types::String),
+    Bytes(Vec<u8>),
     List(types::List<Value>),
     Dictionary(types::Dictionary<Value>),
-    Bytes(Vec<u8>),
 }
 
 impl<'de> de::Deserialize<'de> for Value {
@@ -78,6 +78,7 @@ mod tests {
     crate::macros::parse_test! {
         test_number: _ => (b"i4e" == Number(4));
         test_string: _ => (b"4:test" == String("test".to_string()));
+        test_bytes: _ => (b"4:l\xFFlw" == Bytes(b"l\xFFlw".to_vec()));
         test_list: _ => (b"l3:foo3:bare" == List(vec![String("foo".to_string()), String("bar".to_string())]));
         test_dictionary: _ => (b"d4:spaml1:a1:bee" == {
             let mut map = BTreeMap::new();
