@@ -1,6 +1,7 @@
 use crate::stream::BinaryStream;
 use crate::types;
 use crate::{Error, Result};
+use std::str::from_utf8;
 
 use serde::{de, Deserialize};
 
@@ -69,10 +70,6 @@ impl<'de> Deserializer<'de> {
 
     pub(crate) fn parse_str(&mut self) -> Result<&'de str> {
         let bytes = self.parse_bytes()?;
-        Self::from_utf8(bytes)
-    }
-
-    fn from_utf8(bytes: &[u8]) -> Result<&str> {
         std::str::from_utf8(bytes).map_err(|_| Error::InvalidString)
     }
 }
@@ -88,10 +85,9 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
             b'0'..=b'9' => {
                 let bytes = self.parse_bytes()?;
 
-                match Deserializer::from_utf8(bytes) {
+                match from_utf8(bytes) {
                     Ok(str) => visitor.visit_string(str.to_owned()),
-                    Err(Error::InvalidString) => visitor.visit_byte_buf(bytes.to_owned()),
-                    Err(e) => Err(e),
+                    Err(_) => visitor.visit_byte_buf(bytes.to_owned()),
                 }
             }
             b'i' => self.deserialize_i64(visitor),
