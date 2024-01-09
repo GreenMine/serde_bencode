@@ -4,7 +4,7 @@ use serde_derive::Deserialize;
 struct Torrent<'a> {
     announce: Option<String>,
     #[serde(rename = "announce-list")]
-    announce_list: Option<Vec<String>>,
+    announce_list: Option<Vec<Vec<String>>>,
     #[serde(borrow)]
     info: TorrentInfo<'a>,
     #[serde(rename = "creation date")]
@@ -25,7 +25,7 @@ struct TorrentInfo<'a> {
     private: u8,
     name: String,
 
-    files: Vec<TorrentFile>,
+    files: Option<Vec<TorrentFile>>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -35,7 +35,7 @@ struct TorrentFile {
 }
 
 fn main() {
-    let content = std::fs::read("./examples/example.torrent").unwrap();
+    let content = std::fs::read("./examples/ubuntu.torrent").unwrap();
 
     let torrent: Torrent = serde_bencode::from_binary(&content).unwrap();
 
