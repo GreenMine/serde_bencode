@@ -334,7 +334,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: de::Visitor<'de>,
     {
-        self.deserialize_string(visitor)
+        self.deserialize_str(visitor)
     }
 
     fn deserialize_ignored_any<V>(self, visitor: V) -> std::result::Result<V::Value, Self::Error>
