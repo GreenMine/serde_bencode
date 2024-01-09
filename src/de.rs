@@ -11,6 +11,7 @@ pub struct Deserializer<'de> {
 pub fn from_binary<'a, T: Deserialize<'a>>(data: &'a [u8]) -> Result<T> {
     let mut deserializer = Deserializer::new(data);
 
+    // TODO: check trailing characters
     T::deserialize(&mut deserializer)
 }
 
@@ -66,12 +67,13 @@ impl<'de> Deserializer<'de> {
         self.input.try_take(len)
     }
 
-    pub(crate) fn parse_string(&mut self) -> Result<types::String> {
-        Ok(self
-            .parse_bytes()?
-            .into_iter()
-            .map(|&v| v as char)
-            .collect::<String>())
+    pub(crate) fn parse_str(&mut self) -> Result<&'de str> {
+        let bytes = self.parse_bytes()?;
+        Self::from_utf8(bytes)
+    }
+
+    fn from_utf8(bytes: &[u8]) -> Result<&str> {
+        std::str::from_utf8(bytes).map_err(|_| Error::InvalidString)
     }
 }
 
@@ -83,7 +85,15 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         V: de::Visitor<'de>,
     {
         match self.input.try_peek()? {
-            b'0'..=b'9' => self.deserialize_string(visitor),
+            b'0'..=b'9' => {
+                let bytes = self.parse_bytes()?;
+
+                match Deserializer::from_utf8(bytes) {
+                    Ok(str) => visitor.visit_string(str.to_owned()),
+                    Err(Error::InvalidString) => visitor.visit_byte_buf(bytes.to_owned()),
+                    Err(e) => Err(e),
+                }
+            }
             b'i' => self.deserialize_i64(visitor),
             b'l' => self.deserialize_seq(visitor),
             b'd' => self.deserialize_map(visitor),
@@ -175,18 +185,18 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         Err(Error::TypeNotSupported)
     }
 
-    fn deserialize_str<V>(self, _visitor: V) -> std::result::Result<V::Value, Self::Error>
+    fn deserialize_str<V>(self, visitor: V) -> std::result::Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {
-        Err(Error::TypeNotSupported)
+        visitor.visit_borrowed_str(self.parse_str()?)
     }
 
     fn deserialize_string<V>(self, visitor: V) -> std::result::Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {
-        visitor.visit_string(self.parse_string()?)
+        self.deserialize_str(visitor)
     }
 
     fn deserialize_bytes<V>(self, visitor: V) -> std::result::Result<V::Value, Self::Error>
@@ -196,11 +206,11 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         visitor.visit_borrowed_bytes(self.parse_bytes()?)
     }
 
-    fn deserialize_byte_buf<V>(self, _visitor: V) -> std::result::Result<V::Value, Self::Error>
+    fn deserialize_byte_buf<V>(self, visitor: V) -> std::result::Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {
-        todo!()
+        self.deserialize_bytes(visitor)
     }
 
     fn deserialize_option<V>(self, visitor: V) -> std::result::Result<V::Value, Self::Error>
@@ -406,17 +416,8 @@ mod tests {
             map
         });
         test_bytes: &[u8] => (b"4:asdf" == b"asdf");
-        test_bytes_list: Vec<&[u8]> => (b"l4:teste" == vec![&b"test"[..]])
-    }
-
-    #[test]
-    pub fn test_borrow_str() {
-        let j = b"4:meta";
-
-        assert!(matches!(
-            from_binary::<&str>(j),
-            Err(crate::Error::TypeNotSupported)
-        ));
+        test_bytes_list: Vec<&[u8]> => (b"l4:teste" == vec![&b"test"[..]]);
+        test_borrow_str: &str => (b"4:meta" == "meta")
     }
 
     #[test]

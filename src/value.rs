@@ -3,14 +3,13 @@ use std::collections::BTreeMap;
 use crate::types;
 use serde::de;
 
-// TODO: thing about adding T generic, cuz bencode can contains only single type of data in
-// collections(maybe can collect different, idk)
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Value {
     Number(types::Number),
     String(types::String),
     List(types::List<Value>),
     Dictionary(types::Dictionary<Value>),
+    Bytes(Vec<u8>),
 }
 
 impl<'de> de::Deserialize<'de> for Value {
@@ -32,6 +31,10 @@ impl<'de> de::Deserialize<'de> for Value {
 
             fn visit_string<E>(self, v: String) -> Result<Self::Value, E> {
                 Ok(Value::String(v))
+            }
+
+            fn visit_byte_buf<E>(self, v: Vec<u8>) -> Result<Self::Value, E> {
+                Ok(Value::Bytes(v))
             }
 
             fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>

@@ -13,6 +13,7 @@ pub enum Error {
     ExpectedList,
     ExpectedDictionary,
     ExpectedEnd,
+    InvalidString,
     TypeNotSupported,
     Syntax,
     Eof,
@@ -47,6 +48,7 @@ impl std::fmt::Display for Error {
             Error::ExpectedDictionary => write!(f, "expected dictionary"),
             Error::TypeNotSupported => write!(f, "type is not supported in BENCODE format"),
             Error::ExpectedEnd => write!(f, "expected end"),
+            Error::InvalidString => write!(f, "string is not valid"),
             Error::Syntax => write!(f, "syntax error"),
         }
     }
