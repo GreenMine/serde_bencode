@@ -1,6 +1,8 @@
 use serde_bytes::Bytes;
 use std::collections::BTreeMap;
 
+use serde_bencode::Value;
+
 macro_rules! de_tests {
     ($($f:ident, $t:ty, $bencode:literal, $typed:expr),*) => {
         mod de {
@@ -60,18 +62,18 @@ tests! {
     });
     test_bytes: &Bytes => (b"4:asdf" == Bytes::new(b"asdf"));
     test_bytes_list: Vec<&Bytes> => (b"l4:teste" == vec![Bytes::new(b"test")]);
-    test_borrow_str: &str => (b"4:meta" == "meta")
+    test_borrow_str: &str => (b"4:meta" == "meta");
 
-    // test_dyn_number: _ => (b"i4e" == Number(4));
-    // test_dyn_string: _ => (b"4:test" == String("test".to_string()));
-    // test_dyn_bytes: _ => (b"4:l\xFFlw" == Bytes(b"l\xFFlw".to_vec()));
-    // test_dyn_list: _ => (b"l3:foo3:bare" == List(vec![String("foo".to_string()), String("bar".to_string())]));
-    // test_dyn_dictionary: _ => (b"d4:spaml1:a1:bee" == {
-    //     let mut map = BTreeMap::new();
-    //     map.insert(
-    //         "spam".to_string(),
-    //         List(vec![String("a".to_string()), String("b".to_string())]),
-    //     );
-    //     Dictionary(map)
-    // })
+    test_dyn_number: _ => (b"i4e" == Value::Number(4));
+    test_dyn_string: _ => (b"4:test" == Value::String("test".to_string()));
+    test_dyn_bytes: _ => (b"4:l\xFFlw" == Value::Bytes(b"l\xFFlw".to_vec()));
+    test_dyn_list: _ => (b"l3:foo3:bare" == Value::List(vec![Value::String("foo".to_string()), Value::String("bar".to_string())]));
+    test_dyn_dictionary: _ => (b"d4:spaml1:a1:bee" == {
+        let mut map = BTreeMap::new();
+        map.insert(
+            "spam".to_string(),
+            Value::List(vec![Value::String("a".to_string()), Value::String("b".to_string())]),
+        );
+        Value::Dictionary(map)
+    })
 }
