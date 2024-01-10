@@ -3,12 +3,12 @@ type UnitContainer<'a> = &'a [Unit];
 
 use crate::{Error, Result};
 
-pub struct BinaryStream<'s> {
+pub struct ReadBinaryStream<'s> {
     data: UnitContainer<'s>,
     p: usize,
 }
 
-impl<'s> BinaryStream<'s> {
+impl<'s> ReadBinaryStream<'s> {
     pub fn new(data: UnitContainer<'s>) -> Self {
         Self { data, p: 0 }
     }
@@ -41,7 +41,7 @@ impl<'s> BinaryStream<'s> {
     }
 }
 
-impl<'s> Iterator for &mut BinaryStream<'s> {
+impl<'s> Iterator for &mut ReadBinaryStream<'s> {
     type Item = Unit;
 
     fn next(&mut self) -> Option<Self::Item> {
