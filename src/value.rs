@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use crate::types;
-use serde::de;
+use serde::{de, ser};
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Value {
@@ -65,5 +65,20 @@ impl<'de> de::Deserialize<'de> for Value {
         }
 
         deserializer.deserialize_any(ValueVisitor)
+    }
+}
+
+impl ser::Serialize for Value {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            Value::Number(n) => serializer.serialize_i64(*n),
+            Value::String(str) => serializer.serialize_str(str),
+            Value::Bytes(bytes) => serializer.serialize_bytes(bytes),
+            Value::List(list) => list.serialize(serializer),
+            Value::Dictionary(dict) => dict.serialize(serializer),
+        }
     }
 }
