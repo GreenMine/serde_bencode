@@ -38,6 +38,7 @@ macro_rules! tests {
 }
 
 tests! {
+    test_number: i64 => (b"i-114e" == -114);
     test_string: String => (b"3:foo" == "foo".to_string());
     test_empty_list: Vec<String> => (b"le" == Vec::new());
     test_list: Vec<String> => (b"l4:spam4:eggse" == vec!["spam".to_string(), "eggs".to_string()]);
