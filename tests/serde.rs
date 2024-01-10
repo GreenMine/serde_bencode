@@ -1,5 +1,5 @@
 use serde_bytes::Bytes;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 macro_rules! de_tests {
     ($($f:ident, $t:ty, $bencode:literal, $typed:expr),*) => {
@@ -24,7 +24,7 @@ macro_rules! ser_tests {
                 #[test]
                 pub fn $f() {
                     let typed: $t = $typed;
-                    assert_eq!($bencode, &serde_bencode::to_binary(typed).unwrap()[..])
+                    assert_eq!($bencode, &serde_bencode::to_binary(typed).unwrap()[..]);
                 }
             )*
         }
@@ -44,17 +44,17 @@ tests! {
     test_empty_list: Vec<String> => (b"le" == Vec::new());
     test_list: Vec<String> => (b"l4:spam4:eggse" == vec!["spam".to_string(), "eggs".to_string()]);
     test_tuple: (String, String) => (b"l4:spam4:eggse" == ("spam".to_string(), "eggs".to_string()));
-    test_empty_dictionary: HashMap<String, i32> => (b"de" == HashMap::new());
-    test_dictionary: HashMap<String, u8> => (b"d3:onei1e3:twoi2e5:threei3e4:fouri4ee" == {
-        let mut map = HashMap::new();
-        map.insert("one".to_string(), 1);
-        map.insert("two".to_string(), 2);
-        map.insert("three".to_string(), 3);
+    test_empty_dictionary: BTreeMap<String, i32> => (b"de" == BTreeMap::new());
+    test_dictionary: BTreeMap<String, u8> => (b"d4:fouri4e3:onei1e5:threei3e3:twoi2ee" == {
+        let mut map = BTreeMap::new();
         map.insert("four".to_string(), 4);
+        map.insert("one".to_string(), 1);
+        map.insert("three".to_string(), 3);
+        map.insert("two".to_string(), 2);
         map
     });
     test_list_in_dictionary: _ => (b"d4:spaml1:a1:bee" == {
-        let mut map = HashMap::new();
+        let mut map = BTreeMap::new();
         map.insert("spam".to_string(), vec!["a".to_string(), "b".to_string()]);
         map
     });

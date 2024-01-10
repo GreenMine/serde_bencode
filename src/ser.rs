@@ -101,15 +101,15 @@ impl<'a> ser::Serializer for &'a mut Serializer {
         Ok(self.ser_number(v))
     }
 
-    fn serialize_f32(self, v: f32) -> Result<Self::Ok> {
+    fn serialize_f32(self, _v: f32) -> Result<Self::Ok> {
         Err(Error::TypeNotSupported)
     }
 
-    fn serialize_f64(self, v: f64) -> Result<Self::Ok> {
+    fn serialize_f64(self, _v: f64) -> Result<Self::Ok> {
         Err(Error::TypeNotSupported)
     }
 
-    fn serialize_char(self, v: char) -> Result<Self::Ok> {
+    fn serialize_char(self, _v: char) -> Result<Self::Ok> {
         // TODO: maybe allow one-symbol string
         Err(Error::TypeNotSupported)
     }
@@ -199,7 +199,8 @@ impl<'a> ser::Serializer for &'a mut Serializer {
     }
 
     fn serialize_map(self, len: Option<usize>) -> Result<Self::SerializeMap> {
-        todo!()
+        self.container.push(b'd');
+        Ok(self)
     }
 
     fn serialize_struct(self, name: &'static str, len: usize) -> Result<Self::SerializeStruct> {
@@ -295,18 +296,19 @@ impl<'a> ser::SerializeMap for &'a mut Serializer {
     where
         T: Serialize,
     {
-        todo!()
+        key.serialize(&mut **self)
     }
 
     fn serialize_value<T: ?Sized>(&mut self, value: &T) -> std::result::Result<(), Self::Error>
     where
         T: Serialize,
     {
-        todo!()
+        value.serialize(&mut **self)
     }
 
     fn end(self) -> std::result::Result<Self::Ok, Self::Error> {
-        todo!()
+        self.container.push(b'e');
+        Ok(())
     }
 }
 
