@@ -1,4 +1,4 @@
-use crate::stream::ReadBinaryStream;
+use crate::stream::BinaryStream;
 use crate::types;
 use crate::{Error, Result};
 use std::str::from_utf8;
@@ -6,7 +6,7 @@ use std::str::from_utf8;
 use serde::{de, Deserialize};
 
 pub struct Deserializer<'de> {
-    input: ReadBinaryStream<'de>,
+    input: BinaryStream<'de>,
 }
 
 pub fn from_binary<'a, T: Deserialize<'a>>(data: &'a [u8]) -> Result<T> {
@@ -19,7 +19,7 @@ pub fn from_binary<'a, T: Deserialize<'a>>(data: &'a [u8]) -> Result<T> {
 impl<'de> Deserializer<'de> {
     pub fn new(data: &'de [u8]) -> Self {
         Self {
-            input: ReadBinaryStream::new(data),
+            input: BinaryStream::new(data),
         }
     }
 

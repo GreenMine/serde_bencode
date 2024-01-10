@@ -18,6 +18,29 @@ impl Serializer {
             container: Vec::new(),
         }
     }
+
+    fn push_bytes(&mut self, bytes: &[u8]) -> () {
+        self.container.extend_from_slice(bytes);
+    }
+
+    fn push_str(&mut self, string: String) -> () {
+        self.push_bytes(string.as_bytes())
+    }
+
+    pub(crate) fn ser_number(&mut self, number: impl Into<i64>) -> () {
+        self.container.push(b'i');
+        self.push_str(number.into().to_string());
+        self.container.push(b'e');
+    }
+
+    pub(crate) fn ser_bytes(&mut self, bytes: &[u8]) -> () {
+        self.push_str(bytes.len().to_string());
+        self.container.push(b':');
+        self.push_bytes(bytes);
+    }
+    pub(crate) fn ser_string(&mut self, string: &str) -> () {
+        self.ser_bytes(string.as_bytes())
+    }
 }
 
 impl<'a> ser::Serializer for &'a mut Serializer {
@@ -39,71 +62,76 @@ impl<'a> ser::Serializer for &'a mut Serializer {
 
     type SerializeStructVariant = Self;
 
-    fn serialize_bool(self, v: bool) -> Result<Self::Ok> {
-        todo!()
+    fn serialize_bool(self, _v: bool) -> Result<Self::Ok> {
+        Err(Error::TypeNotSupported)
     }
 
     fn serialize_i8(self, v: i8) -> Result<Self::Ok> {
-        todo!()
+        Ok(self.ser_number(v))
     }
 
     fn serialize_i16(self, v: i16) -> Result<Self::Ok> {
-        todo!()
+        Ok(self.ser_number(v))
     }
 
     fn serialize_i32(self, v: i32) -> Result<Self::Ok> {
-        todo!()
+        Ok(self.ser_number(v))
     }
 
     fn serialize_i64(self, v: i64) -> Result<Self::Ok> {
-        todo!()
+        Ok(self.ser_number(v))
     }
 
     fn serialize_u8(self, v: u8) -> Result<Self::Ok> {
-        todo!()
+        Ok(self.ser_number(v))
     }
 
     fn serialize_u16(self, v: u16) -> Result<Self::Ok> {
-        todo!()
+        Ok(self.ser_number(v))
     }
 
     fn serialize_u32(self, v: u32) -> Result<Self::Ok> {
-        todo!()
+        Ok(self.ser_number(v))
     }
 
     fn serialize_u64(self, v: u64) -> Result<Self::Ok> {
-        todo!()
+        // FIXME: Error::Syntax????
+        let v: i64 = v.try_into().map_err(|_| Error::Syntax)?;
+
+        Ok(self.ser_number(v))
     }
 
     fn serialize_f32(self, v: f32) -> Result<Self::Ok> {
-        todo!()
+        Err(Error::TypeNotSupported)
     }
 
     fn serialize_f64(self, v: f64) -> Result<Self::Ok> {
-        todo!()
+        Err(Error::TypeNotSupported)
     }
 
     fn serialize_char(self, v: char) -> Result<Self::Ok> {
-        todo!()
+        // TODO: maybe allow one-symbol string
+        Err(Error::TypeNotSupported)
     }
 
     fn serialize_str(self, v: &str) -> Result<Self::Ok> {
-        todo!()
+        Ok(self.ser_string(v))
     }
 
     fn serialize_bytes(self, v: &[u8]) -> Result<Self::Ok> {
-        todo!()
+        Ok(self.ser_bytes(v))
     }
 
     fn serialize_none(self) -> Result<Self::Ok> {
-        todo!()
+        // TODO: think about it
+        Ok(())
     }
 
     fn serialize_some<T: ?Sized>(self, value: &T) -> Result<Self::Ok>
     where
         T: serde::Serialize,
     {
-        todo!()
+        value.serialize(self)
     }
 
     fn serialize_unit(self) -> Result<Self::Ok> {
@@ -144,7 +172,8 @@ impl<'a> ser::Serializer for &'a mut Serializer {
     }
 
     fn serialize_seq(self, len: Option<usize>) -> Result<Self::SerializeSeq> {
-        todo!()
+        self.container.push(b'l');
+        Ok(self)
     }
 
     fn serialize_tuple(self, len: usize) -> Result<Self::SerializeTuple> {
@@ -197,11 +226,12 @@ impl<'a> ser::SerializeSeq for &'a mut Serializer {
     where
         T: Serialize,
     {
-        todo!()
+        value.serialize(&mut **self)
     }
 
     fn end(self) -> std::result::Result<Self::Ok, Self::Error> {
-        todo!()
+        self.container.push(b'e');
+        Ok(())
     }
 }
 

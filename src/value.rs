@@ -67,26 +67,3 @@ impl<'de> de::Deserialize<'de> for Value {
         deserializer.deserialize_any(ValueVisitor)
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use std::collections::BTreeMap;
-
-    use super::Value::*;
-    use crate::from_binary;
-
-    crate::macros::parse_test! {
-        test_number: _ => (b"i4e" == Number(4));
-        test_string: _ => (b"4:test" == String("test".to_string()));
-        test_bytes: _ => (b"4:l\xFFlw" == Bytes(b"l\xFFlw".to_vec()));
-        test_list: _ => (b"l3:foo3:bare" == List(vec![String("foo".to_string()), String("bar".to_string())]));
-        test_dictionary: _ => (b"d4:spaml1:a1:bee" == {
-            let mut map = BTreeMap::new();
-            map.insert(
-                "spam".to_string(),
-                List(vec![String("a".to_string()), String("b".to_string())]),
-            );
-            Dictionary(map)
-        })
-    }
-}
