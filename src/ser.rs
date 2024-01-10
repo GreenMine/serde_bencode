@@ -177,7 +177,7 @@ impl<'a> ser::Serializer for &'a mut Serializer {
     }
 
     fn serialize_tuple(self, len: usize) -> Result<Self::SerializeTuple> {
-        todo!()
+        self.serialize_seq(Some(len))
     }
 
     fn serialize_tuple_struct(
@@ -245,11 +245,12 @@ impl<'a> ser::SerializeTuple for &'a mut Serializer {
     where
         T: Serialize,
     {
-        todo!()
+        value.serialize(&mut **self)
     }
 
     fn end(self) -> std::result::Result<Self::Ok, Self::Error> {
-        todo!()
+        self.container.push(b'e');
+        Ok(())
     }
 }
 
