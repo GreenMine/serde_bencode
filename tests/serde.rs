@@ -1,3 +1,4 @@
+use serde_bytes::Bytes;
 use std::collections::HashMap;
 
 macro_rules! de_tests {
@@ -57,8 +58,8 @@ tests! {
         map.insert("spam".to_string(), vec!["a".to_string(), "b".to_string()]);
         map
     });
-    test_bytes: &[u8] => (b"4:asdf" == b"asdf");
-    test_bytes_list: Vec<&[u8]> => (b"l4:teste" == vec![&b"test"[..]]);
+    test_bytes: &Bytes => (b"4:asdf" == Bytes::new(b"asdf"));
+    test_bytes_list: Vec<&Bytes> => (b"l4:teste" == vec![Bytes::new(b"test")]);
     test_borrow_str: &str => (b"4:meta" == "meta")
 
     // test_dyn_number: _ => (b"i4e" == Number(4));
