@@ -1,7 +1,7 @@
 use crate::{Error, Result};
 use serde::ser::{self, Serialize};
 
-pub fn to_binary<S: Serialize>(data: S) -> Result<Vec<u8>> {
+pub fn to_binary<S: Serialize>(data: &S) -> Result<Vec<u8>> {
     let mut serializer = Serializer::new();
 
     data.serialize(&mut serializer)?;

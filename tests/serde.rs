@@ -26,7 +26,7 @@ macro_rules! ser_tests {
                 #[test]
                 pub fn $f() {
                     let typed: $t = $typed;
-                    assert_eq!($bencode, &serde_bencode::to_binary(typed).unwrap()[..]);
+                    assert_eq!($bencode, &serde_bencode::to_binary(&typed).unwrap()[..]);
                 }
             )*
         }
