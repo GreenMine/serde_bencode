@@ -86,8 +86,8 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
                 let bytes = self.parse_bytes()?;
 
                 match from_utf8(bytes) {
-                    Ok(str) => visitor.visit_string(str.to_owned()),
-                    Err(_) => visitor.visit_byte_buf(bytes.to_owned()),
+                    Ok(str) => visitor.visit_borrowed_str(str),
+                    Err(_) => visitor.visit_borrowed_bytes(bytes),
                 }
             }
             b'i' => self.deserialize_i64(visitor),
